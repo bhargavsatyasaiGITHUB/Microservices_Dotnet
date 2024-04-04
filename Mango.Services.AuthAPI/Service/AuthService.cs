@@ -47,8 +47,10 @@ namespace Mango.Services.AuthAPI.Service
                 return new LoginResponseDto() { User = null, Token = "" };
             }
 
+
+            var roles=await _userManager.GetRolesAsync(user);
             // if user was founf, Generate JWT Token
-            var token = _jwtTokenGenerator.GenerateToken(user);
+            var token = _jwtTokenGenerator.GenerateToken(user,roles);
 
             UserDto userDto = new()
             {

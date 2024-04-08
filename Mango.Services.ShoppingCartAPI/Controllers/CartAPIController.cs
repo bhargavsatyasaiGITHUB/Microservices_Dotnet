@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Mango.MessageBus;
 using Mango.Services.ShoppingCartAPI.Data;
 using Mango.Services.ShoppingCartAPI.Models;
 using Mango.Services.ShoppingCartAPI.Models.Dto;
@@ -14,16 +15,21 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
     [ApiController]
     public class CartAPIController : Controller
     {
+
        private ResponseDto _responseDto;
         private IMapper _mapper;
         private readonly AppDbContext _db;
         private IProductService _productService;
+        private readonly IMessageBus _messageBus;
+        private IConfiguration _configuration;
         private ICouponService _couponService;
 
         public CartAPIController(AppDbContext db,
-            IMapper mapper,IProductService productService , ICouponService couponService)
+            IMapper mapper,IProductService productService , ICouponService couponService,IMessageBus messageBus,IConfiguration configuration)
         {
                 _db = db;
+            _messageBus = messageBus;
+            _configuration = configuration;
             _productService = productService;
             _couponService = couponService;
             this._responseDto = new ResponseDto();
@@ -95,6 +101,25 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
             return _responseDto;
         }
 
+
+        [HttpPost("EmailCartRequest")]
+        public async Task<object> EmailCartRequest([FromBody] CartDto cartDto)
+        {
+            try
+            {
+                await _messageBus.PublishMessage(cartDto, _configuration.GetValue<string>("TopicAndQueueNames:EmailShoppingCart"));
+                _responseDto.Result = true;
+            }
+            catch (Exception ex)
+            {
+                _responseDto.IsSuccess = false;
+                _responseDto.Message = ex.Message;
+
+            }
+            return _responseDto;
+        }
+
+
         [HttpPost("RemoveCoupon")]
         public async Task<object> RemoveCoupon([FromBody] CartDto cartDto)
         {
@@ -116,7 +141,7 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
         }
 
 
-        [HttpPost("CartUpsert")]
+        [HttpPost("AddCart")]
         public async Task<ResponseDto> CartUpsert(CartDto cartDto)
         {
             try

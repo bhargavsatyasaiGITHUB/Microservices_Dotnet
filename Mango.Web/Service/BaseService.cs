@@ -32,6 +32,7 @@ namespace Mango.Web.Service
                 {
                     var token = _tokenProvider.GetToken();
                     message.Headers.Add("Authorization", $"Bearer {token}");
+
                 }
                 //Token
                 message.RequestUri=new Uri(requestDto.Url);

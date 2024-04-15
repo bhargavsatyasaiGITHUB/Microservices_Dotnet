@@ -115,6 +115,7 @@ namespace Mango.Services.ProductAPI.Controllers
         {
             try
             {
+
                 Product obj = _db.Products.First(u => u.ProductId == id);
                 _db.Products.Remove(obj);
                 _db.SaveChanges();

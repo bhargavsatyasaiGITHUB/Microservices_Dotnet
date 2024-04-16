@@ -2,7 +2,7 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace Mango.Web.Models
+namespace Mango.Services.OrderAPI.Models.Dto
 {
     public class CartHeaderDto
     {
@@ -14,13 +14,9 @@ namespace Mango.Web.Models
         public string? CouponId { get; set; }
         public double Discount { get; set; }
         public double CartTotal { get; set; }
-        [Required]
         public string? FirstName { get; set; }
-        [Required]
         public string? LastName { get; set; }
-        [Required]
         public string? Phone { get; set; }
-        [Required]
         public string? Email { get; set; }
     }
 

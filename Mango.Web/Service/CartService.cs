@@ -55,7 +55,7 @@ namespace Mango.Web.Service
 
         public async Task<ResponseDto?> UpsertCartAsync(CartDto cartDto)
         {
-           
+
 
 
 
@@ -78,6 +78,8 @@ namespace Mango.Web.Service
             reqDto.Url = "https://localhost:7003/api/cart/AddCart";
             //   reqDto.Url = SD.ShoppingCartAPI + "/api/cart/AddCart";
             var res = await _baseService.SendAsync(reqDto);
+            //ResponseDto responseDto=new ResponseDto();
+            //responseDto.Result = responseBody;
             return res;
         }
     }

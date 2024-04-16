@@ -163,7 +163,7 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
                     var cartDetailsFromDb=await _db.CartDetails.AsNoTracking().FirstOrDefaultAsync(
                         u=>u.ProductId==cartDto.CartDetails.First().ProductId &&
                         u.CartHeaderId==cartHeaderFromDb.cartHeaderId);
-                    if (cartHeaderFromDb==null)
+                    if (cartDetailsFromDb == null)
                     {
                         cartDto.CartDetails.First().CartHeaderId = cartHeaderFromDb.cartHeaderId;
                         _db.CartDetails.Add(_mapper.Map<CartDetails>(cartDto.CartDetails.First()));

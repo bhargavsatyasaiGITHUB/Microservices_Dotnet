@@ -9,6 +9,8 @@ using Mango.Services.OrderAPI.Utility;
 using Mango.Services.OrderAPI.Models;
 using Stripe;
 using Stripe.Checkout;
+using Mango.MessageBus;
+using Microsoft.EntityFrameworkCore;
 namespace Mango.Services.OrderAPI.Controllers
 {
     [Route("api/order")]
@@ -20,18 +22,70 @@ namespace Mango.Services.OrderAPI.Controllers
         private IMapper _mapper;
         private readonly AppDbContext _db;
         private IProductService _productService;
+        private readonly IMessageBus _messageBus;
+        private readonly IConfiguration _configuration;
       
 
 
         public OrderAPIController(AppDbContext db,
-            IMapper mapper, IProductService productService)
+            IMapper mapper, IProductService productService, IConfiguration configuration,IMessageBus messageBus)
         {
             _db = db;
+            _messageBus = messageBus;
             _productService = productService;
             this._responseDto = new ResponseDto();
             _mapper = mapper;
+            _configuration = configuration;
         }
-       // [Authorize]
+
+        [Authorize]
+        [HttpGet("GetOrders")]
+        public ResponseDto? Get(string? userId="")
+        {
+            try
+            {
+                IEnumerable<OrderHeader> objList;
+                if (User.IsInRole(SD.RoleAdmin))
+                {
+                    objList=_db.OrderHeaders.Include(u=>u.OrderDetails).OrderByDescending(u => u.OrderHeaderId).ToList();
+                }
+                else
+                {
+                    objList = _db.OrderHeaders.Include(u => u.OrderDetails).Where(u=>u.UserId==userId).OrderByDescending(u => u.OrderHeaderId).ToList();
+                }
+                _responseDto.Result=_mapper.Map<IEnumerable<OrderdetailsDto>>(objList); 
+            }
+            catch (Exception ex)
+            {
+
+                _responseDto.IsSuccess = false;
+                _responseDto.Message = ex.Message;
+            }
+            return _responseDto;
+        }
+
+
+        [Authorize]
+        [HttpGet("GetOrder/{id:int}")]
+        public ResponseDto? Get(int id)
+        {
+            try
+            {
+              OrderHeader orderHeader = _db.OrderHeaders.Include(u=>u.OrderDetails).First(u=>u.OrderHeaderId == id);
+                _responseDto.Result=_mapper.Map<OrderHeaderDto>(orderHeader);
+
+            }
+            catch (Exception ex)
+            {
+
+                _responseDto.IsSuccess = false;
+                _responseDto.Message = ex.Message;
+            }
+            return _responseDto;
+        }
+
+
+        // [Authorize]
         [HttpPost("CreateOrder")]
         public async Task<ResponseDto> CreateOrder([FromBody] CartDto cart)
         {
@@ -145,6 +199,16 @@ namespace Mango.Services.OrderAPI.Controllers
 
                     orderHeader.Status = SD.Status_Approved;
                     _db.SaveChanges();
+
+                    RewardsDto rewardsDto = new()
+                    {
+                        OrderId = orderHeader.OrderHeaderId,
+                        RewardsActivity = Convert.ToInt32(orderHeader.OrderTotal),
+                        UserId = orderHeader.UserId
+                    };
+                    string topicName = _configuration.GetValue<string>("TopicAndQueueNames:OrderCreatedTopic");
+                    await _messageBus.PublishMessage(rewardsDto, topicName);
+
                     _responseDto.Result = _mapper.Map<OrderHeaderDto>(orderHeader);
                 }
 
@@ -154,6 +218,41 @@ namespace Mango.Services.OrderAPI.Controllers
             {
 
                 _responseDto.Message = ex.Message;
+                _responseDto.IsSuccess = false;
+            }
+            return _responseDto;
+        }
+
+        [Authorize]
+        [HttpPost("UpdateOrderStatus/{orderId:int}")]
+        public async Task<ResponseDto> UpdateOrderStatus(int orderId, [FromBody] string newStatus)
+        {
+            try
+            {
+                OrderHeader orderHeader = _db.OrderHeaders.First(u=>u.OrderHeaderId==orderId);
+                if (orderHeader != null)
+                {
+                    if (newStatus==SD.Status_Cancelled)
+                    {
+                        // we will give refund
+                        var options = new RefundCreateOptions
+                        {
+                            Reason = RefundReasons.RequestedByCustomer,
+                            PaymentIntent = orderHeader.PaymentIntentId
+                        };
+
+                        var service = new RefundService();
+                        Refund refund=service.Create(options);
+                        orderHeader.Status=newStatus;
+                    }
+                     orderHeader.Status = newStatus;
+                    _db.SaveChanges();
+                   
+                }
+            }
+            catch (Exception ex)
+            {
+
                 _responseDto.IsSuccess = false;
             }
             return _responseDto;

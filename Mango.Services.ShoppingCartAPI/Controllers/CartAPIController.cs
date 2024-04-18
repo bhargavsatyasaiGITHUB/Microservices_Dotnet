@@ -142,9 +142,11 @@ namespace Mango.Services.ShoppingCartAPI.Controllers
         }
 
 
-        [HttpPost("AddCart")]
-        public async Task<ResponseDto> CartUpsert(CartDto cartDto)
+        [HttpPost("CartUpsert")]
+       // public async Task<ResponseDto> CartUpsert([FromBody] CartDto cartDto)
+        public async Task<ResponseDto> CartUpsert()
         {
+            CartDto cartDto = new CartDto();
             try
             {
                 var cartHeaderFromDb=await _db.CartHeaders.AsNoTracking().FirstOrDefaultAsync(u=>u.UserId==cartDto.CartHeader.UserId);

@@ -56,12 +56,13 @@ namespace Mango.Web.Service
         public async Task<ResponseDto?> UpsertCartAsync(CartDto cartDto)
         {
 
-
+            //https://localhost:7003/api/cart/CartUpsert
 
 
             //HttpClient client = new HttpClient();
 
-            //HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7003/api/cart/AddCart");
+            //HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "https://localhost:7003/api/cart/CartUpsert");
+
 
             //request.Headers.Add("accept", "text/plain");
 
@@ -75,11 +76,11 @@ namespace Mango.Web.Service
             var reqDto = new RequestDto();
             reqDto.ApiType = SD.ApiType.POST;
             reqDto.Data = cartDto;
-            reqDto.Url = "https://localhost:7003/api/cart/AddCart";
-            //   reqDto.Url = SD.ShoppingCartAPI + "/api/cart/AddCart";
+            //reqDto.Url = "https://localhost:7003/api/cart/CartUpsert";
+               reqDto.Url = SD.ShoppingCartAPI + "/api/cart/CartUpsert";
             var res = await _baseService.SendAsync(reqDto);
-            //ResponseDto responseDto=new ResponseDto();
-            //responseDto.Result = responseBody;
+           // ResponseDto responseDto=new ResponseDto();
+           // responseDto.Result = responseBody;
             return res;
         }
     }

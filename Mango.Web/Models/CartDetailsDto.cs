@@ -7,7 +7,7 @@ namespace Mango.Web.Models
 {
     public class CartDetailsDto
     {
-        [Key] public int Id { get; set; }
+        [Key] public int Id { get; set; } = 1;
         public int CartDetailsId { get; set; }
         public int CartHeaderId { get; set; }
         [ForeignKey("CartHeaderId")]
